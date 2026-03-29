@@ -28,35 +28,31 @@ COPY . .
 # Turn off strict SSL so ancient NPM won't fail due to expired registry certs
 RUN npm config set strict-ssl false -g
 
-RUN npm i --registry=https://:2015-06-23T07:00:00.000000Z@time-machines-npm.sealsecurity.io/ \
-    lodash-cli \
-    narwhal \
-    rhino \
-    ringo \
-    phantomjs
-# # Install Narwhal 
-# RUN wget https://github.com/280north/narwhal/archive/refs/tags/v0.3.2.tar.gz \
-#     && tar -xzf v0.3.2.tar.gz -C /opt/ && rm v0.3.2.tar.gz \
-#     && ln -s /opt/narwhal-0.3.2/bin/narwhal /usr/local/bin/narwhal
+RUN npm i --registry=https://:2015-06-23T07:00:00.000000Z@time-machines-npm.sealsecurity.io/ lodash-cli \
+    
+# Install Narwhal 
+RUN wget https://github.com/280north/narwhal/archive/refs/tags/v0.3.2.tar.gz \
+    && tar -xzf v0.3.2.tar.gz -C /opt/ && rm v0.3.2.tar.gz \
+    && ln -s /opt/narwhal-0.3.2/bin/narwhal /usr/local/bin/narwhal
 
-# # Install Rhino 
-# RUN mkdir /opt/rhino-1.7R5 \
-#     && wget -O /opt/rhino-1.7R5/js.jar https://repo1.maven.org/maven2/org/mozilla/rhino/1.7R5/rhino-1.7R5.jar \
-#     && echo '#!/bin/sh\njava -jar /opt/rhino-1.7R5/js.jar $@' > /usr/local/bin/rhino \
-#     && chmod +x /usr/local/bin/rhino
+# Install Rhino 
+RUN mkdir /opt/rhino-1.7R5 \
+    && wget -O /opt/rhino-1.7R5/js.jar https://repo1.maven.org/maven2/org/mozilla/rhino/1.7R5/rhino-1.7R5.jar \
+    && echo '#!/bin/sh\njava -jar /opt/rhino-1.7R5/js.jar $@' > /usr/local/bin/rhino \
+    && chmod +x /usr/local/bin/rhino
 
-# # Install RingoJS (Fixed the tag from 'v0.9' to '0.9')
-# RUN wget https://github.com/ringo/ringojs/archive/refs/tags/v0.9.0.tar.gz -O ringojs.tar.gz \
-#     && tar -xzf ringojs.tar.gz -C /opt/ \
-#     && rm ringojs.tar.gz \
-#     && ln -s /opt/ringojs-0.9/bin/ringo /usr/local/bin/ringo
+# Install RingoJS (Fixed the tag from 'v0.9' to '0.9')
+RUN wget https://github.com/ringo/ringojs/archive/refs/tags/v0.9.0.tar.gz -O ringojs.tar.gz \
+    && tar -xzf ringojs.tar.gz -C /opt/ \
+    && rm ringojs.tar.gz \
+    && ln -s /opt/ringojs-0.9/bin/ringo /usr/local/bin/ringo
 
-# # Install PhantomJS manually 
-# RUN wget https://github.com/Medium/phantomjs/releases/download/v1.9.19/phantomjs-1.9.8-linux-x86_64.tar.bz2 -O phantomjs.tar.bz2 \
-#     && tar -xjf phantomjs.tar.bz2 \
-#     && mv phantomjs-1.9.8-linux-x86_64 /usr/local/share/phantomjs \
-#     && ln -s /usr/local/share/phantomjs/bin/phantomjs /usr/local/bin/phantomjs \
-#     && rm phantomjs.tar.bz2
+# Install PhantomJS manually 
+RUN wget https://github.com/Medium/phantomjs/releases/download/v1.9.19/phantomjs-1.9.8-linux-x86_64.tar.bz2 -O phantomjs.tar.bz2 \
+    && tar -xjf phantomjs.tar.bz2 \
+    && mv phantomjs-1.9.8-linux-x86_64 /usr/local/share/phantomjs \
+    && ln -s /usr/local/share/phantomjs/bin/phantomjs /usr/local/bin/phantomjs \
+    && rm phantomjs.tar.bz2
 
 
 CMD ["bash"]
