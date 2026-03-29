@@ -1,0 +1,107 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node_version: ["0.8", "0.10"]
+        build: [compat, modern, legacy, mobile]
+        bin: [node]
+        include:
+          - node_version: "0.10"
+            bin: "istanbul"
+            build: "false"
+          - node_version: "0.10"
+            bin: "narwhal"
+            build: "compat"
+          - node_version: "0.10"
+            bin: "narwhal"
+            build: "legacy"
+          - node_version: "0.10"
+            bin: "rhino"
+            build: "compat"
+          - node_version: "0.10"
+            bin: "ringo"
+            build: "compat"
+          - node_version: "0.10"
+            bin: "phantomjs"
+            build: "compat"
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 10
+          
+      - name: Build Legacy Docker Image
+        run: docker build -t lodash-legacy .
+        
+      # Create a directory on the runner to catch the artifact
+      - name: Create output directory
+        run: mkdir -p ./artifact_out
+        
+      - name: Run Matrix Tests and Pack Artifact
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}/artifact_out:/app/artifact_out \
+            -e BIN=${{ matrix.bin }} \
+            -e BUILD=${{ matrix.build }} \
+            -e NODE_VER=${{ matrix.node_version }} \
+            lodash-legacy \
+            bash -c "
+              # Setup Node Environment
+              source /usr/local/nvm/nvm.sh
+              nvm use \$NODE_VER
+              
+              # Force git to use HTTPS
+              git config --global url.\"https://github.com/\".insteadOf git://github.com/
+              
+              # Execute Travis before_install logic (lodash-cli bootstrap)
+              if [ \"\$BUILD\" != 'false' ]; then
+                git clone --depth=10 --branch=master git://github.com/lodash/lodash-cli.git ./node_modules/lodash-cli || true
+                mkdir -p ./node_modules/lodash-cli/node_modules
+                cd ./node_modules/lodash-cli/node_modules/
+                ln -s ../../../ ./lodash
+                cd ../ && npm i --force . && cd ../../
+                
+                # Build the specified lodash distribution
+                node ./node_modules/lodash-cli/bin/lodash \$BUILD -o ./dist/lodash.\$BUILD.js
+                
+                # Run the tests
+                cd ./test
+                \$BIN ./test.js ../dist/lodash.\$BUILD.js
+                cd ..
+              fi
+              
+              # Istanbul coverage
+              if [ \"\$BIN\" = 'istanbul' ]; then
+                npm i istanbul@\"~0.1.0\" -g
+                istanbul cover -x \"**/vendor/**\" ./test/test.js -- ./dist/lodash.js
+              fi
+              
+              # ---------------------------------------------------
+              # PACKAGING: Only pack on the primary Node 0.10 run
+              # ---------------------------------------------------
+              if [ \"\$NODE_VER\" = '0.10' ] && [ \"\$BIN\" = 'node' ] && [ \"\$BUILD\" = 'modern' ]; then
+                echo \"Primary run detected: Packing artifact...\"
+                node ./node_modules/lodash-cli/bin/lodash build
+                npm pack
+                mv lodash-*.tgz /app/artifact_out/
+              fi
+            "
+
+      # Upload the artifact ONLY on the exact same matrix run
+      - name: Upload Artifact
+        if: matrix.node_version == '0.10' && matrix.bin == 'node' && matrix.build == 'modern'
+        uses: actions/upload-artifact@v4
+        with:
+          name: lodash-2.4.1-package
+          path: ./artifact_out/*.tgz
+          retention-days: 1
