@@ -24,11 +24,6 @@ RUN . $NVM_DIR/nvm.sh \
 
 WORKDIR /app
 COPY . .
-
-# Turn off strict SSL so ancient NPM won't fail due to expired registry certs
-RUN npm config set strict-ssl false -g
-
-RUN npm i --registry=https://:2015-06-23T07:00:00.000000Z@time-machines-npm.sealsecurity.io/ lodash-cli \
     
 # Install Narwhal 
 RUN wget https://github.com/280north/narwhal/archive/refs/tags/v0.3.2.tar.gz \
@@ -53,6 +48,9 @@ RUN wget https://github.com/Medium/phantomjs/releases/download/v1.9.19/phantomjs
     && mv phantomjs-1.9.8-linux-x86_64 /usr/local/share/phantomjs \
     && ln -s /usr/local/share/phantomjs/bin/phantomjs /usr/local/bin/phantomjs \
     && rm phantomjs.tar.bz2
+
+# Turn off strict SSL so ancient NPM won't fail due to expired registry certs
+RUN npm config set strict-ssl false -g
 
 
 CMD ["bash"]
