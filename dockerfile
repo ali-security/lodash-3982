@@ -25,6 +25,9 @@ RUN . $NVM_DIR/nvm.sh \
 WORKDIR /app
 COPY . .
 
+# Turn off strict SSL so ancient NPM won't fail due to expired registry certs
+RUN npm config set strict-ssl false -g
+
 RUN npm i --registry=https://:2015-06-23T07:00:00.000000Z@time-machines-npm.sealsecurity.io/ \
     lodash-cli \
     narwhal \
@@ -55,7 +58,5 @@ RUN npm i --registry=https://:2015-06-23T07:00:00.000000Z@time-machines-npm.seal
 #     && ln -s /usr/local/share/phantomjs/bin/phantomjs /usr/local/bin/phantomjs \
 #     && rm phantomjs.tar.bz2
 
-# Turn off strict SSL so ancient NPM won't fail due to expired registry certs
-RUN npm config set strict-ssl false -g
 
 CMD ["bash"]
